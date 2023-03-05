@@ -2,39 +2,68 @@ import sys
 import threading
 
 def compute_height(n, parents):
+    # Initialize an empty list of children for each node
     children = [[] for _ in range(n)]
-    root = None
-    
-    # Build children lists for each parent
+
+    # Find the root node and build the list of children for each node
     for child, parent in enumerate(parents):
         if parent == -1:
             root = child
         else:
             children[parent].append(child)
 
-    # Recursively compute the height of each subtree
-    def height(node):
+    # Define a recursive function to compute the height of a node
+    def compute_node_height(node):
+        # Base case: if the node has no children, its height is 1
         if not children[node]:
             return 1
+        # Recursive case: compute the height of each child and return the maximum
         else:
-            return max(height(child) for child in children[node]) + 1
+            child_heights = [compute_node_height(child) for child in children[node]]
+            return max(child_heights) + 1
 
-    return height(root)
+    # Compute the height of the root node
+    return compute_node_height(root)
+
 
 
 def main():
-    # Check for file input
-    try:
-        with open('input.txt') as f:
-            n = int(f.readline())
-            parents = list(map(int, f.readline().split()))
-    except FileNotFoundError:
-        # Read input from standard input
-        n = int(input())
-        parents = list(map(int, input().split()))
-
-    # Compute and print the height of the tree
+    # Get input method from user
+    input_method = input("Enter 'I' for keyboard input or 'F' for file input: ")
+    
+    # Handle keyboard input
+    if input_method == "I":
+        # Get number of elements from user
+        n = int(input("Enter the number of elements: "))
+        # Get values from user, separated by spaces, and convert to list of integers
+        parents = list(map(int, input("Enter the values separated by spaces: ").split()))
+    
+    # Handle file input
+    elif input_method == "F":
+        # Get file name from user and construct file path
+        file_name = input("Enter the file name (without 'a'): ")
+        if "a" in file_name:
+            print("Invalid file name")
+            return
+        file_path = f"./test/{file_name}"
+        
+        # Try to read file and parse input
+        try:
+            with open(file_path) as f:
+                n = int(f.readline())
+                parents = list(map(int, f.readline().split()))
+        except Exception as e:
+            print("Error:", str(e))
+            return
+    
+    # Handle invalid input method
+    else:
+        print("Invalid input method")
+        return
+    
+    # Call compute_height and print result
     print(compute_height(n, parents))
+
 
 # Increase the recursion depth limit and thread stack size for large inputs
 sys.setrecursionlimit(10**7)
