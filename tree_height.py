@@ -1,71 +1,62 @@
 import sys
 import threading
 
-
 def compute_height(n, parents):
-    # Write this function
-    kur = [[] for _ in range(n)]
+    children = [[] for _ in range(n)]
     root = None
-    #max_height = 0
-    # Your code here
-    for g, parent in enumerate(parents):
+    
+    # Build children lists for each parent
+    for child, parent in enumerate(parents):
         if parent == -1:
-            root = g
-           
+            root = child
         else:
-            kur[parent].append(g)
+            children[parent].append(child)
 
-    def max_height(vuzol):
-        height = 1
-        
-        if not kur[vuzol]:
-            return height
+    # Recursively compute the height of each subtree
+    def height(node):
+        if not children[node]:
+            return 1
         else:
-            for child in kur[vuzol]:
-                height = max(height, max_height(child))
+            return max(height(child) for child in children[node]) + 1
 
-            return height + 1
-    return max_height(root)
+    return height(root)
+
 
 def main():
-    # implement input form keyboard and from files
-    text = input()
-    if "I" in text:
-        # input number of elements
-        n = int(input())
-        # input values in one variable, separate with space, split these values in an array
-        parents = list(map(int, input().split()))
-    elif "F" in text:
+    # Get input from user
+    input_type = input("Enter 'I' for keyboard input, or 'F' for file input: ").strip().upper()
 
-    # let user input file name to use, don't allow file names with letter a
-    # account for github input inprecision 
-        path = './test/'
-        file = input()
-        folder = path + file
-        if "a" not in file:
-            try:
-                with open(folder) as f:
-                    n = int(f.readline())
-                    parents = list(map(int, f.readline().split()))
-            except Exception as e:
-                print("Kluda:(", str(e))
-                return
-            
-        else:
-            print("Kluda")
+    if input_type == "I":
+        # Get input from keyboard
+        n = int(input("Enter the number of nodes: "))
+        parents = list(map(int, input("Enter the parent of each node separated by space: ").split()))
+
+    elif input_type == "F":
+        # Get input from file
+        filename = input("Enter the filename: ")
+        
+        if "a" in filename:
+            print("Error: invalid filename")
             return
         
+        try:
+            with open(filename) as f:
+                n = int(f.readline())
+                parents = list(map(int, f.readline().split()))
+        except FileNotFoundError:
+            print("Error: file not found")
+            return
+        except ValueError:
+            print("Error: invalid file format")
+            return
     else:
-        print("Enter 'I' or 'F':")
+        print("Error: invalid input type")
         return
-            
-    # call the function and output it's result
+    
+    # Compute and print the height of the tree
     print(compute_height(n, parents))
 
-
-# In Python, the default limit on recursion depth is rather low,
-# so raise it here for this problem. Note that to take advantage
-# of bigger stack, we have to launch the computation in a new thread.
-sys.setrecursionlimit(10**7)  # max depth of recursion
-threading.stack_size(2**27)   # new thread will get stack of such size
+# Increase the recursion depth limit and thread stack size for large inputs
+sys.setrecursionlimit(10**7)
+threading.stack_size(2**27)
 threading.Thread(target=main).start()
