@@ -1,71 +1,57 @@
 import sys
 import threading
+import os
 
 def compute_height(n, parents):
-    # Initialize an empty list of children for each node
-    children = [[] for _ in range(n)]
-
-    # Find the root node and build the list of children for each node
-    for child, parent in enumerate(parents):
+    children = {i: [] for i in range(n)}
+    
+    root = None
+    for i in range(n):
+        parent = parents[i]
         if parent == -1:
-            root = child
+            root = i
         else:
-            children[parent].append(child)
+            children[parent].append(i)
 
-    # Define a recursive function to compute the height of a node
-    def compute_node_height(node):
-        # Base case: if the node has no children, its height is 1
+    def height(node):
         if not children[node]:
             return 1
-        # Recursive case: compute the height of each child and return the maximum
         else:
-            child_heights = [compute_node_height(child) for child in children[node]]
-            return max(child_heights) + 1
-
-    # Compute the height of the root node
-    return compute_node_height(root)
-
-
+            return 1 + max(height(child) for child in children[node])
+    return height(root)
 
 def main():
-    # Get input method from user
-    input_method = input("Enter 'I' for keyboard input or 'F' for file input: ")
-    
-    # Handle keyboard input
-    if input_method == "I":
-        # Get number of elements from user
-        n = int(input("Enter the number of elements: "))
-        # Get values from user, separated by spaces, and convert to list of integers
-        parents = list(map(int, input("Enter the values separated by spaces: ").split()))
-    
-    # Handle file input
-    elif input_method == "F":
-        # Get file name from user and construct file path
-        file_name = input("Enter the file name (without 'a'): ")
-        if "a" in file_name:
-            print("Invalid file name")
-            return
-        file_path = f"./test/{file_name}"
+    text = input()
+    if "I" in text:
+        n = int(input())
+        parents = list(map(int, input().split()))
+    elif "F" in text:
+
+        path = "./test/"
+
+        filename = input("Enter the file name: ")
+
+        file_path = os.path.join(path, filename)
+
+        if "a" not in filename:
+            try:
+                with open(file_path) as f:
+                    n = int(f.readline().strip())
+                    parents = list(map(int, f.readline().strip().split()))
+            except Exception as e:
+                print("Error:", str(e))
+                return
         
-        # Try to read file and parse input
-        try:
-            with open(file_path) as f:
-                n = int(f.readline())
-                parents = list(map(int, f.readline().split()))
-        except Exception as e:
-            print("Error:", str(e))
-            return
-    
-    # Handle invalid input method
     else:
-        print("Invalid input method")
+        print("Enter 'I' or 'F':")
         return
-    
-    # Call compute_height and print result
+            
     print(compute_height(n, parents))
 
 
-# Increase the recursion depth limit and thread stack size for large inputs
-sys.setrecursionlimit(10**7)
-threading.stack_size(2**27)
+# In Python, the default limit on recursion depth is rather low,
+# so raise it here for this problem. Note that to take advantage
+# of bigger stack, we have to launch the computation in a new thread.
+sys.setrecursionlimit(10**7)  # max depth of recursion
+threading.stack_size(2**27)   # new thread will get stack of such size
 threading.Thread(target=main).start()
